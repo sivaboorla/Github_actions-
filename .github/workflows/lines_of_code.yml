@@ -1,14 +1,15 @@
-name: My First GitHub Actions
+name: Lines of code
 
-on: [push]
+on:
+  workflow_dispatch
 
 jobs:
-  build:
+  fetch-repos:
     runs-on: ubuntu-latest
 
    
     steps:
-    - uses: actions/checkout@v3
+    - uses: 
     - name: Install dependencies
       run: |
         
