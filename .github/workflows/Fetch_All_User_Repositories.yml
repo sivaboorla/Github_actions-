@@ -15,12 +15,10 @@ jobs:
       - name: Fetch all repositories
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
-          USERNAME: ${{ sivaboorla }} # Replace with the target GitHub username
+         # USERNAME: ${{ sivaboorla }} # Replace with the target GitHub username
         run: |
+          
           # Set maximum repositories per page (max 100)
-          PER_PAGE=100
-          PAGE=1
-          REPOS_FILE="user_repos.json"
           echo " sivaBoorla"
       #     # Initialize JSON array
       #     echo "[]" > $REPOS_FILE
