@@ -17,50 +17,51 @@ jobs:
           GIT_PAT: ${{ secrets.GIT_PAT }}
          # USERNAME: ${{ sivaboorla }} # Replace with the target GitHub username
         run: |
+          #Set maximum repositories per page (max 100)
+          PER_PAGE=100
+          PAGE=1
+          REPOS_FILE="user_repos.json"
+          # Initialize JSON array
+          echo "[]" > $REPOS_FILE
           
-          # Set maximum repositories per page (max 100)
-          echo " sivaBoorla"
-      #     # Initialize JSON array
-      #     echo "[]" > $REPOS_FILE
+          # Loop through pages until no more results
+          while true; do
+            # Make API call to fetch repositories
+            RESPONSE=$(curl -s -H "Authorization: Bearer $GIT_PAT" \
+                            -H "Accept: application/vnd.github.v3+json" \
+                            -H "X-GitHub-Api-Version: 2022-11-28" \
+                            "https://api.github.com/users/sivaboorla/repos?per_page=$PER_PAGE&page=$PAGE")
+            
+            # Check if response is empty or an error
+            if [[ $(echo "$RESPONSE" | jq '. | length') -eq 0 ]]; then
+              break
+            fi
+            
+            # Append to JSON file (merge arrays)
+            TEMP_FILE="temp_repos.json"
+            jq -s '.[0] + .[1]' $REPOS_FILE <(echo "$RESPONSE") > $TEMP_FILE
+            mv $TEMP_FILE $REPOS_FILE
+            
+            # Check for next page in Link header
+            LINK_HEADER=$(curl -I -s -H "Authorization: Bearer $GH_TOKEN" \
+                                   -H "Accept: application/vnd.github.v3+json" \
+                                   -H "X-GitHub-Api-Version: 2022-11-28" \
+                                   "https://api.github.com/users/sivaboorla/repos?per_page=$PER_PAGE&page=$PAGE" | grep -i link:)
+            
+            # If no 'next' link, break
+            if [[ ! "$LINK_HEADER" =~ rel=\"next\" ]]; then
+              break
+            fi
+            
+            # Increment page
+            ((PAGE++))
+          done
           
-      #     # Loop through pages until no more results
-      #     while true; do
-      #       # Make API call to fetch repositories
-      #       RESPONSE=$(curl -s -H "Authorization: Bearer $GIT_PAT" \
-      #                       -H "Accept: application/vnd.github.v3+json" \
-      #                       -H "X-GitHub-Api-Version: 2022-11-28" \
-      #                       "https://api.github.com/users/sivaboorla/repos?per_page=$PER_PAGE&page=$PAGE")
-            
-      #       # Check if response is empty or an error
-      #       if [[ $(echo "$RESPONSE" | jq '. | length') -eq 0 ]]; then
-      #         break
-      #       fi
-            
-      #       # Append to JSON file (merge arrays)
-      #       TEMP_FILE="temp_repos.json"
-      #       jq -s '.[0] + .[1]' $REPOS_FILE <(echo "$RESPONSE") > $TEMP_FILE
-      #       mv $TEMP_FILE $REPOS_FILE
-            
-      #       # Check for next page in Link header
-      #       LINK_HEADER=$(curl -I -s -H "Authorization: Bearer $GH_TOKEN" \
-      #                              -H "Accept: application/vnd.github.v3+json" \
-      #                              -H "X-GitHub-Api-Version: 2022-11-28" \
-      #                              "https://api.github.com/users/sivaboorla/repos?per_page=$PER_PAGE&page=$PAGE" | grep -i link:)
-            
-      #       # If no 'next' link, break
-      #       if [[ ! "$LINK_HEADER" =~ rel=\"next\" ]]; then
-      #         break
-      #       fi
-            
-      #       # Increment page
-      #       ((PAGE++))
-      #     done
-          
-      #     # Display results
-      #     cat $REPOS_FILE
+          # Display results
+          cat $REPOS_FILE
 
-      # - name: Upload repository list as artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: user-repository-list
-      #     path: user_repos.json
+      - name: Upload repository list as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: user-repository-list
+          path: user_repos.json
