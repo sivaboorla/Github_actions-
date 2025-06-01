@@ -44,7 +44,7 @@ jobs:
             mv $TEMP_FILE $REPOS_FILE
             
             # Check for next page in Link header
-            LINK_HEADER=$(curl -I -s -H "Authorization: Bearer $GH_TOKEN" \
+            LINK_HEADER=$(curl -I -s -H "Authorization: Bearer $GIT_PAT" \
                                    -H "Accept: application/vnd.github.v3+json" \
                                    -H "X-GitHub-Api-Version: 2022-11-28" \
                                    "https://api.github.com/users/sivaboorla/repos?per_page=$PER_PAGE&page=$PAGE" | grep -i link:)
